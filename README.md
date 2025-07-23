@@ -2,7 +2,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Description
 
-DFtoolAI is a modern, AI-powered PDF summarizer built with Next.js, Tailwind CSS, Clerk authentication, Prisma ORM, and Stripe payments.
+PDFtoolAI is a modern, AI-powered PDF summarizer built with Next.js, Tailwind CSS, Clerk authentication, Prisma ORM, and Stripe payments.
 Users can upload PDF files, receive AI-generated summaries, and manage subscriptions with secure authentication and payment processing.
 The app features a minimalistic, responsive dark UI and supports user management, subscription status, and webhook integrations for real-time updates.
 
