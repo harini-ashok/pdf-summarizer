@@ -60,5 +60,13 @@ export async function createSubscription() {
     priceId: process.env.STRIPE_YEARLY_PRICE_ID as string
   })
 
+  console.log('🚀 Redirecting to Stripe URL:', subscriptionUrl)
+  
+  // Validate the session URL before redirecting
+  if (!subscriptionUrl || !subscriptionUrl.startsWith('https://checkout.stripe.com')) {
+    console.error('❌ Invalid Stripe session URL:', subscriptionUrl)
+    throw new Error(`Invalid Stripe session URL: ${subscriptionUrl}`)
+  }
+
   return redirect(subscriptionUrl)
 }
