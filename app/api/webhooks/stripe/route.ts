@@ -5,8 +5,16 @@ import { stripe } from '@/lib/stripe'
 import prisma from '@/lib/prisma'
 
 export async function POST(req: Request) {
+  console.log('🔔 Webhook received!')
+  
   const body = await req.text()
   const signature = (await headers()).get("Stripe-Signature") as string
+
+  console.log('📝 Webhook details:', {
+    hasBody: !!body,
+    hasSignature: !!signature,
+    webhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET
+  })
 
   try {
     const event = stripe.webhooks.constructEvent(
@@ -15,22 +23,35 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!
     )
 
+    console.log('✅ Webhook verified! Event type:', event.type)
+
     switch (event.type) {
       case 'checkout.session.completed':
+        console.log('💳 Processing checkout.session.completed')
         await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session)
+        console.log('✅ Checkout completed handled')
         break
 
       case 'customer.subscription.updated':
+        console.log('🔄 Processing customer.subscription.updated')
         await handleSubscriptionUpdated(event.data.object as Stripe.Subscription)
+        console.log('✅ Subscription updated handled')
         break
 
       case 'customer.subscription.deleted':
+        console.log('❌ Processing customer.subscription.deleted')
         await handleSubscriptionDeleted(event.data.object as Stripe.Subscription)
+        console.log('✅ Subscription deleted handled')
         break
 
       case 'invoice.payment_succeeded':
+        console.log('💰 Processing invoice.payment_succeeded')
         await handlePaymentSucceeded(event.data.object as Stripe.Invoice)
+        console.log('✅ Payment succeeded handled')
         break
+
+      default:
+        console.log('⚠️ Unhandled event type:', event.type)
     }
 
     return NextResponse.json({ received: true }, { status: 200 })
@@ -46,23 +67,47 @@ export async function POST(req: Request) {
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-  if (!session.subscription || !session.customer) return
+  console.log('🔍 Checkout session details:', {
+    id: session.id,
+    hasSubscription: !!session.subscription,
+    hasCustomer: !!session.customer
+  })
 
+  if (!session.subscription || !session.customer) {
+    console.log('❌ Missing subscription or customer in session')
+    return
+  }
+
+  console.log('📞 Retrieving subscription from Stripe...')
   const subscription = await stripe.subscriptions.retrieve(
     session.subscription as string
   )
 
-  await prisma.user.update({
-    where: { stripeCustomerId: session.customer as string },
-    data: {
-      subscription: {
-        upsert: {
-          create: mapSubscriptionData(subscription),
-          update: mapSubscriptionData(subscription),
+  console.log('📋 Subscription data:', {
+    id: subscription.id,
+    status: subscription.status,
+    customerId: subscription.customer
+  })
+
+  console.log('🔍 Looking for user with stripeCustomerId:', session.customer)
+  
+  try {
+    const result = await prisma.user.update({
+      where: { stripeCustomerId: session.customer as string },
+      data: {
+        subscription: {
+          upsert: {
+            create: mapSubscriptionData(subscription),
+            update: mapSubscriptionData(subscription),
+          },
         },
       },
-    },
-  })
+    })
+    console.log('✅ User updated successfully:', result.id)
+  } catch (error) {
+    console.error('❌ Database error:', error)
+    throw error
+  }
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
