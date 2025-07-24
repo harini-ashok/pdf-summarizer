@@ -40,11 +40,23 @@ export async function createSubscription() {
     throw new Error('Failed to set stripeCustomerId for the user')
   }
 
+  // Debug environment variables
+  console.log('Environment check:', {
+    NODE_ENV: process.env.NODE_ENV,
+    VERCEL_PROJECT_PRODUCTION_URL: process.env.VERCEL_PROJECT_PRODUCTION_URL,
+    VERCEL_URL: process.env.VERCEL_URL,
+    PRODUCTION_URL: process.env.PRODUCTION_URL
+  })
+
+  const domainUrl = process.env.NODE_ENV === 'production' 
+    ? (process.env.PRODUCTION_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL || 'https://pdf-summarizer-plxi6ct9q-harini-ashoks-projects.vercel.app')
+    : 'http://localhost:3000'
+
+  console.log('Using domain URL:', domainUrl)
+
   const subscriptionUrl = await getStripeSession({
     customerId: databaseUser.stripeCustomerId,
-    domainUrl: process.env.NODE_ENV === 'production' 
-      ? (process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL || process.env.PRODUCTION_URL || 'https://your-domain.vercel.app') as string
-      : 'http://localhost:3000',
+    domainUrl,
     priceId: process.env.STRIPE_YEARLY_PRICE_ID as string
   })
 

@@ -87,6 +87,14 @@ export default function Dashboard() {
     ))
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-2 border-purple-500 border-t-transparent rounded-full"></div>
+      </div>
+    )
+  }
+
   if (!isSubscribed) {
     return (
       <div className="min-h-screen bg-[#0A0A0F] flex flex-col items-center justify-center space-y-8 p-4">
