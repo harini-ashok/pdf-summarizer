@@ -14,6 +14,20 @@ export const getStripeSession = async ({
     domainUrl: string;
     customerId: string;
 }) => {
+    console.log('🎯 getStripeSession received:', {
+        priceId,
+        domainUrl,
+        customerId,
+        successUrl: `${domainUrl}/payment/success`,
+        cancelUrl: `${domainUrl}/payment/cancelled`
+    })
+
+    // Validate domainUrl
+    if (!domainUrl || typeof domainUrl !== 'string' || !domainUrl.startsWith('http')) {
+        console.error('❌ Invalid domainUrl:', domainUrl)
+        throw new Error(`Invalid domainUrl: ${domainUrl}`)
+    }
+
     const session = await stripe.checkout.sessions.create({
         customer: customerId,
         mode: "subscription",
@@ -30,5 +44,6 @@ export const getStripeSession = async ({
         cancel_url: `${domainUrl}/payment/cancelled`
     })
 
+    console.log('✅ Stripe session created:', session.id)
     return session.url as string
 }
