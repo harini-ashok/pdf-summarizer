@@ -25,6 +25,7 @@ export async function createSubscription() {
   const email = user?.primaryEmailAddress?.emailAddress
   
   if (!databaseUser.stripeCustomerId) {
+    console.log('🆕 Creating new Stripe customer for user:', userId)
     const customer = await stripe.customers.create({
       email: email
     })
@@ -34,6 +35,25 @@ export async function createSubscription() {
       data: { stripeCustomerId: customer.id },
       select: { stripeCustomerId: true }
     })
+    console.log('✅ Created Stripe customer:', customer.id)
+  } else {
+    // Verify the customer still exists in Stripe
+    try {
+      await stripe.customers.retrieve(databaseUser.stripeCustomerId)
+      console.log('✅ Existing Stripe customer verified:', databaseUser.stripeCustomerId)
+    } catch (error) {
+      console.log('❌ Stripe customer not found, creating new one:', databaseUser.stripeCustomerId)
+      const customer = await stripe.customers.create({
+        email: email
+      })
+
+      databaseUser = await prisma.user.update({
+        where: { id: userId },
+        data: { stripeCustomerId: customer.id },
+        select: { stripeCustomerId: true }
+      })
+      console.log('✅ Created replacement Stripe customer:', customer.id)
+    }
   }
 
   if (!databaseUser.stripeCustomerId) {
