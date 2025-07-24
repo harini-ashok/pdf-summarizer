@@ -4,6 +4,15 @@ import Stripe from 'stripe'
 import { stripe } from '@/lib/stripe'
 import prisma from '@/lib/prisma'
 
+// Test endpoint accessibility
+export async function GET() {
+  console.log('🔍 Webhook endpoint GET test')
+  return NextResponse.json({ 
+    status: 'Webhook endpoint is accessible',
+    timestamp: new Date().toISOString()
+  })
+}
+
 export async function POST(req: Request) {
   console.log('🔔 Webhook received!')
   
