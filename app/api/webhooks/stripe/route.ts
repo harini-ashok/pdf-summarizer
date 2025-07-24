@@ -70,10 +70,10 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     where: { stripeSubscriptionId: subscription.id },
     data: {
       status: subscription.status,
-      currentPeriodStart: new Date(subscription.items.data[0].current_period_start * 1000),
-      currentPeriodEnd: new Date(subscription.items.data[0].current_period_end * 1000),
-      interval: subscription.items.data[0].plan.interval,
-      planId: subscription.items.data[0].plan.id,
+      currentPeriodStart: new Date(subscription.current_period_start * 1000),
+      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+      interval: subscription.items.data[0].price.recurring?.interval || 'month',
+      planId: subscription.items.data[0].price.id,
     },
   })
 }
@@ -85,15 +85,18 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
+  if (!invoice.subscription) return
+
+  
   const subscription = await stripe.subscriptions.retrieve(
-    invoice.billing_reason as string
+    invoice.subscription as string
   )
 
   await prisma.subscription.update({
     where: { stripeSubscriptionId: subscription.id },
     data: {
-      currentPeriodStart: new Date(subscription.items.data[0].current_period_start * 1000),
-      currentPeriodEnd: new Date(subscription.items.data[0].current_period_end * 1000),
+      currentPeriodStart: new Date(subscription.current_period_start * 1000),
+      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
     },
   })
 }
@@ -102,9 +105,9 @@ function mapSubscriptionData(subscription: Stripe.Subscription) {
   return {
     stripeSubscriptionId: subscription.id,
     status: subscription.status,
-    currentPeriodStart: new Date(subscription.items.data[0].current_period_start * 1000),
-    currentPeriodEnd: new Date(subscription.items.data[0].current_period_end * 1000),
-    interval: subscription.items.data[0].plan.interval,
-    planId: subscription.items.data[0].plan.id,
+    currentPeriodStart: new Date(subscription.current_period_start * 1000),
+    currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+    interval: subscription.items.data[0].price.recurring?.interval || 'month',
+    planId: subscription.items.data[0].price.id,
   }
 }

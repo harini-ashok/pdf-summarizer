@@ -22,7 +22,7 @@ export default function Cancelled() {
                     </p>
                 </div>
                 <Button className="w-full bg-gradient-to-r from-red-500 to-red-400 text-white font-semibold py-3 rounded-xl shadow-lg hover:scale-105 transition-transform">
-                    <Link href="/pricing" className="w-full block">Return to Pricing</Link>
+                    <Link href="/dashboard" className="w-full block">Return to Dashboard</Link>
                 </Button>
             </div>
         </div>

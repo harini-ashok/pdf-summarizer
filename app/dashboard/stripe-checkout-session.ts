@@ -10,7 +10,7 @@ export async function createSubscription() {
   const user = await currentUser()
 
   if (!userId) {
-    return redirect('/sign-in?redirect_url=/pricing')
+    return redirect('/sign-in?redirect_url=/dashboard')
   }
 
   let databaseUser = await prisma.user.findUnique({
@@ -43,7 +43,7 @@ export async function createSubscription() {
   const subscriptionUrl = await getStripeSession({
     customerId: databaseUser.stripeCustomerId,
     domainUrl: process.env.NODE_ENV === 'production' 
-      ? (process.env.PRODUCTION_URL as string) 
+      ? (process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL || process.env.PRODUCTION_URL || 'https://your-domain.vercel.app') as string
       : 'http://localhost:3000',
     priceId: process.env.STRIPE_YEARLY_PRICE_ID as string
   })
