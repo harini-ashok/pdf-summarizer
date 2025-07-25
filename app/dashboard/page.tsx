@@ -80,11 +80,63 @@ export default function Dashboard() {
   }, [selectedFile])
 
   const formatSummaryContent = (text: string) => {
-    return text.split('\n').map((paragraph, index) => (
-      <p key={index} className="mb-4 text-gray-300 leading-relaxed">
-        {paragraph.replace(/^\s*[\-•*]\s*/, '• ')}
-      </p>
-    ))
+    const sections = text.split('\n\n').filter(section => section.trim())
+    
+    return sections.map((section, sectionIndex) => {
+      const lines = section.split('\n').filter(line => line.trim())
+      
+      // Check if this is a header (starts with ## or is all caps or ends with :)
+      const firstLine = lines[0]?.trim()
+      const isHeader = firstLine && (
+        firstLine.startsWith('##') || 
+        firstLine === firstLine.toUpperCase() ||
+        firstLine.endsWith(':')
+      )
+      
+      if (isHeader && lines.length > 1) {
+        return (
+          <div key={sectionIndex} className="mb-6">
+            <h3 className="text-lg font-semibold text-purple-300 mb-3 border-l-4 border-purple-500 pl-3">
+              {firstLine.replace(/^#+\s*/, '').replace(/:$/, '')}
+            </h3>
+            <div className="ml-4 space-y-2">
+              {lines.slice(1).map((line, lineIndex) => (
+                <p key={lineIndex} className="text-gray-300 leading-relaxed">
+                  {line.trim().replace(/^\s*[\-•*]\s*/, '• ')}
+                </p>
+              ))}
+            </div>
+          </div>
+        )
+      }
+      
+      // Regular paragraphs or bullet points
+      return (
+        <div key={sectionIndex} className="mb-4">
+          {lines.map((line, lineIndex) => {
+            const trimmedLine = line.trim()
+            const isBulletPoint = /^\s*[\-•*]\s*/.test(trimmedLine)
+            
+            if (isBulletPoint) {
+              return (
+                <div key={lineIndex} className="flex items-start mb-2">
+                  <span className="text-purple-400 mr-2 mt-1">•</span>
+                  <p className="text-gray-300 leading-relaxed flex-1">
+                    {trimmedLine.replace(/^\s*[\-•*]\s*/, '')}
+                  </p>
+                </div>
+              )
+            }
+            
+            return (
+              <p key={lineIndex} className="text-gray-300 leading-relaxed mb-2">
+                {trimmedLine}
+              </p>
+            )
+          })}
+        </div>
+      )
+    })
   }
 
   if (loading) {
@@ -159,21 +211,46 @@ export default function Dashboard() {
 
             {summary && (
               <div className="bg-[#1A1A23] rounded-2xl p-8 shadow-2xl border border-[#2A2A35] animate-fade-in">
-                <div className="flex items-center mb-8">
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
-                    Document Insights
-                  </h2>
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mr-3">
+                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                    </div>
+                    <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
+                      Document Analysis Complete
+                    </h2>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-medium">
+                      ✓ Processed
+                    </span>
+                    <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-xs font-medium">
+                      AI Generated
+                    </span>
+                  </div>
                 </div>
                 
-                <div className="prose prose-invert max-w-none">
-                  {formatSummaryContent(summary)}
+                <div className="bg-[#0F0F14] rounded-xl p-6 mb-6 border border-[#2A2A35]">
+                  <div className="max-w-none">
+                    {formatSummaryContent(summary)}
+                  </div>
                 </div>
                 
-                <div className="mt-8 pt-6 border-t border-[#2A2A35] flex items-center justify-between text-sm text-gray-400">
-                  <span>Generated at {new Date().toLocaleTimeString()}</span>
-                  <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-xs">
-                    AI Summary
-                  </span>
+                <div className="flex items-center justify-between text-sm text-gray-400 bg-[#0F0F14] rounded-lg p-4">
+                  <div className="flex items-center">
+                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+                    </svg>
+                    <span>Generated at {new Date().toLocaleTimeString()}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                    </svg>
+                    <span>Powered by AI</span>
+                  </div>
                 </div>
               </div>
             )}
