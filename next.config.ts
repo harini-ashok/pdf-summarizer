@@ -12,7 +12,7 @@ const nextConfig = {
   },
   output: 'standalone',
   distDir: '.next',
-  trailingSlash: true,
+  trailingSlash: false,
   webpack: (config: { resolve: { fallback: any } }) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
